@@ -1,0 +1,37 @@
+isPrime( 2 ) .
+isPrime( P ) :-
+  P > 2 ,
+  isDivisible( P , P-1 ) .
+
+isDivisible( P , X ) :-
+  X > 1,
+  P mod X =\= 0 ,
+  isDivisible( P , X-1 ) .
+isDivisible( _ , X ) :-
+  1 is X .
+
+generateNotPrime( 1 , [1] ) :- !.
+generateNotPrime( N , X ) :-
+  isPrime( N ), !,
+  Z is N-1 ,
+  generateNotPrime( Z , X ) .
+generateNotPrime(N, [N | X] ):-
+  Z is N-1 ,
+  generateNotPrime( Z , X ) .
+
+del([_|T],T,1).
+del([Head|Tail],B,N) :-
+    K is N-1,
+    del(Tail,C,K),
+    B = [Head|C].
+
+listdelaux(A,A,[]).
+listdelaux(A,B,Indices) :-
+    Indices = [Index|IndicesTail],
+    del(A,X,Index),
+    listdelaux(X,B,IndicesTail).
+
+listdel(A,B) :- 
+    length(A, N),
+    generateNotPrime(N, P),
+    listdelaux(A,B,P).

@@ -1,0 +1,15 @@
+
+isPrime k = null [ x | x <- [2..k - 1], k `mod` x == 0]
+
+myfilter :: (Int -> Bool) -> [Int] -> Int -> [Int]
+myfilter p [] _ = []
+myfilter p (x:xs) i 
+  | (p i) = x:(myfilter p xs j )
+  | otherwise = (myfilter p xs j)
+  where 
+    j = i + 1
+
+main = do
+  let l = [0,1,2,3, 4, 5, 6, 7, 8, 9, 10, 11] 
+  let res = myfilter isPrime l 0
+  print res

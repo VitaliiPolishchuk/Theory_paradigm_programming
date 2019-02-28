@@ -1,0 +1,17 @@
+count([],X,0).
+count([X|T],X,Y):- count(T,X,Z), Y is 1+Z.
+count([X1|T],X,Z):- X1\=X,count(T,X,Z).
+
+copy(L,R) :- accCp(L,R).
+accCp([],[]).
+accCp([H|T1],[H|T2]) :- accCp(T1,T2).
+
+filter(X, Y) :-
+    count(X, Y, C),
+    C == 1.
+filterListHelper(A, In, Out) :-
+    exclude(filter(A), In, Out).
+
+filterList(In, Out) :-
+    copy(In, A),
+    filterListHelper(A, In, Out).
