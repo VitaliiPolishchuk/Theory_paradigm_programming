@@ -1,0 +1,63 @@
+{-# LANGUAGE ExistentialQuantification #-}
+
+module DFA (
+  DFA,
+  runDFA,
+  scanDFA,
+  isAccepting,
+) where
+
+import Data.Set (Set)
+import qualified Data.Set as Set
+
+data DFA state input = Ord state => DFA
+  (Set state)               -- available states
+  (Set input)               -- alphabet
+  (state -> input -> state) -- transition function
+  state                     -- starting state
+  (Set state)               -- accepting states
+
+isAccepting :: DFA state input -> state -> Bool
+isAccepting (DFA states alphabet delta start accepting) state =
+  Set.member state accepting
+
+scanDFA :: DFA state input -> [input] -> [state]
+scanDFA (DFA state alphabet delta start accepting) input =
+  scanl delta start input
+
+runDFA :: DFA state input -> [input] -> (Bool, [state])
+runDFA dfa input = (isAccepting dfa (last states), states)
+  where states = scanDFA dfa input
+
+data State = Q1 | Q2 deriving (Eq, Ord, Read, Show)
+type Input = Char
+
+delta :: State -> Input -> State
+delta Q1 '0' = Q2
+delta Q1 '1' = Q1
+delta Q2 '1' = Q1
+delta Q2 '0' = Q2
+dfa :: DFA State Input
+dfa = DFA (Set.fromList [Q1, Q2]) (Set.fromList ['0', '1']) delta Q1 (Set.singleton Q2)
+
+formWords :: [String] -> String -> [String]
+formWords [] _ = []
+formWords (word:restList) prefSuf = y:(formWords restList prefSuf)
+  where y = prefSuf ++ word ++ prefSuf
+
+first (x, _) = x
+
+checkDFA :: [String] -> Bool
+checkDFA [] = False
+checkDFA (word:restList) = y || (checkDFA restList)
+  where x = runDFA dfa word
+        y = first x
+
+
+
+main = do 
+  let allStrings = [ c : s | s <- "": allStrings, c <- ['0', '1'] ]
+  let thousandStr = take 1000 allStrings
+  let stringWithSuf = formWords thousandStr "000101011"
+  let res = checkDFA stringWithSuf
+  show res

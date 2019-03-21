@@ -1,0 +1,40 @@
+element_at(X,[X|_],1).
+element_at(X,[_|L],K) :- element_at(X,L,K1), K is K1 + 1.
+    
+peak(A, X, B) :-
+     A > X,
+     B > X. 
+
+isPeak(X, K, R) :- 
+    S is K - 1,
+    B is K + 1,
+    element_at(Se, X, S),
+    element_at(Ke, X, K),
+    element_at(Be, X, B),
+   ( peak(Se, Ke, Be) -> 
+    R = [S];
+   	R = [] ).
+    
+
+findPeak(X, K, R) :-
+    length(X, N),
+    N = K,
+    R = [].
+    
+findPeak(X, K, R1) :-
+    isPeak(X, K, Result) ,
+    J is K + 1,  
+    R1 = [Result|R2],
+    findPeak(X, J, R2).
+
+is_empty(X) :-
+    X == [].
+
+filterList(In, Out) :-
+    exclude(is_empty(), In, Out).
+
+listdel(X, R) :- 
+    K is 2,
+    findPeak(X, K, R1),
+    filterList(R1, R2),
+    length(R2, R).

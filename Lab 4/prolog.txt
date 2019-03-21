@@ -1,0 +1,67 @@
+f(1,0,2).  f(1,1,1).
+f(2,0,2).  f(2,1,1).
+
+
+checkValid(Way, Last, Result) :-
+    (   last(Way, Last) ->  Result = 1 ; Result = 0).
+
+walk(Start, [], [Start]).
+walk(Start,[Input|Inputs],[Start|States]) :-
+    f(Start,Input,State),
+    walk(State, Inputs, States).
+
+checkWord(Start, Word, Result) :-
+    walk(Start, Word, Way),
+    checkValid(Way, 2, Result).
+
+if_(If_1, Then_0, Else_0) :-
+   call(If_1, T),
+   (  T == true -> call(Then_0)
+   ;  T == false -> call(Else_0)
+   ;  nonvar(T) -> throw(error(type_error(boolean,T),_))
+   ;  /* var(T) */ throw(error(instantiation_error,_))
+   ).
+
+=(X, Y, R) :- X == Y,    !, R = true.
+=(X, Y, R) :- ?=(X, Y),  !, R = false. % syntactically different
+=(X, Y, R) :- X \= Y,    !, R = false. % semantically different
+=(X, Y, R) :- R == true, !, X = Y.
+=(X, X, true).
+=(X, Y, false) :-
+   dif(X, Y).
+
+selectd(E,[A|As],Bs1) :-
+    if_(A = E, As = Bs1, 
+               (Bs1 = [A|Bs], selectd(E,As,Bs))).
+
+comb(As,Bs) :-
+   same_length(As,Full),
+   Bs = [_|_],
+   prefix(Bs,Full),
+   foldl(selectd,Bs,As,_).
+
+appendWord([List|Rest], Word, [SubResult|Result]) :-
+    appendWord(Rest, Word, Result),
+    append(Word, List, R1),
+    append(R1, Word, SubResult).
+appendWord(List, Word, SubResult) :-
+    append(Word, List, R1),
+    append(R1, Word, SubResult).
+
+convertedComb(Word, Result) :-
+    comb([1,1,1,0,0,0,0,1], Comb),
+    appendWord(Comb, Word, Result).
+
+isOne(X) :- X == 1.
+
+checkWords([Word|Words], Result) :-
+    checkWord(1, Word, Res),
+    (   isOne(Res) ->  
+    	Result = Res;
+    	checkWords(Words, Result)).
+checkWords(Word, Result) :-
+    checkWord(1, Word, Result).
+
+checkAutomaton(Word, Res) :-
+    convertedComb(Word, Comb),
+    checkWords(Comb, Res).
