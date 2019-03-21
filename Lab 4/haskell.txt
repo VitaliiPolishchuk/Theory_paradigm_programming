@@ -29,16 +29,18 @@ runDFA :: DFA state input -> [input] -> (Bool, [state])
 runDFA dfa input = (isAccepting dfa (last states), states)
   where states = scanDFA dfa input
 
-data State = Q1 | Q2 deriving (Eq, Ord, Read, Show)
+data State = Q1 | Q2 | Q3 deriving (Eq, Ord, Read, Show)
 type Input = Char
 
 delta :: State -> Input -> State
 delta Q1 '0' = Q2
 delta Q1 '1' = Q1
 delta Q2 '1' = Q1
-delta Q2 '0' = Q2
+delta Q2 '0' = Q3
+delta Q3 '1' = Q2
+delta Q3 '0' = Q3
 dfa :: DFA State Input
-dfa = DFA (Set.fromList [Q1, Q2]) (Set.fromList ['0', '1']) delta Q1 (Set.singleton Q2)
+dfa = DFA (Set.fromList [Q1, Q2, Q3]) (Set.fromList ['0', '1']) delta Q1 (Set.singleton Q3)
 
 formWords :: [String] -> String -> [String]
 formWords [] _ = []
@@ -58,6 +60,6 @@ checkDFA (word:restList) = y || (checkDFA restList)
 main = do 
   let allStrings = [ c : s | s <- "": allStrings, c <- ['0', '1'] ]
   let thousandStr = take 1000 allStrings
-  let stringWithSuf = formWords thousandStr "000101011"
+  let stringWithSuf = formWords thousandStr "101010"
   let res = checkDFA stringWithSuf
   show res
