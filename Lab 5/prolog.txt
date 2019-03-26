@@ -1,0 +1,28 @@
+n(aa).
+n(bb).
+n(ss).
+
+rule(1, n(ss), [a, aa, bb]).
+rule(2, n(ss), [bb, a]).
+rule(3, n(aa), [ss]).
+rule(4, n(bb), [b]).
+
+
+all_first(N, Result2) :- 
+    setof(X, first(N, [], X), L),
+    append(L, Result1),
+    sort(Result1, Result2).
+
+first([N|Rest], Stack, Result) :-
+  (   n(N) ->  rule(Number, n(N), Rhs),
+  			   (   not(member(Number, Stack)) -> first(Rhs, [Number|Stack], SubSymbol);
+                                                 SubSymbol = []);
+               SubSymbol = [N]),
+  first(Rest, Stack, Symbol),
+  append(SubSymbol, Symbol, Result).
+
+first([N], Stack, SubSymbol) :-
+  (   n(N) ->  rule(Number, n(N), Rhs),
+  			   (   not(member(Number, Stack)) -> first(Rhs, [Number|Stack], SubSymbol);
+                                                 SubSymbol = []);
+               SubSymbol = [N]).
