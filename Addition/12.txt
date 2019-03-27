@@ -1,0 +1,9 @@
+drop' :: Int -> [a] -> [a]
+drop' _ [] = []
+drop' 0 ys = ys
+drop' x ys = drop' (x-1) (tail ys)
+
+main = do
+  let list1 = [1..10]
+  let finalL = drop' 4 list1
+  print finalL

@@ -1,0 +1,20 @@
+deleteN :: Int -> [a] -> [a]
+deleteN _ []     = []
+deleteN i (a:as)
+   | i == 0    = as
+   | otherwise = a : deleteN (i-1) as
+
+zsuv [] _ = []
+zsuv x 0 = x
+zsuv x k = (zsuv l h)
+  where h = k - 1
+        ls = last x
+        xs = [ls] ++ x
+        n = length xs
+        m = n - 1
+        l = deleteN m xs
+
+main = do
+  let list1 = [1..10]
+  let finalL = zsuv list1 3
+  print finalL

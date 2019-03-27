@@ -1,0 +1,30 @@
+
+isPeak :: Int -> Int -> Int -> Bool
+isPeak a x b = a > x && x < b
+
+isNull :: Int -> Bool
+isNull x = x == 0
+
+myfilter :: (Int -> Int -> Int -> Bool) -> [Int] -> Int -> [Int]
+
+myfilter p (x:y:z:xs) i 
+  | (isNull n) = []
+  | (p x y z) = j:(myfilter p nL j )
+  | otherwise = (myfilter p nL j)
+  where 
+    j = i + 1
+    nL = y:z:xs
+    n = length(xs)
+
+lmin (x:y:xs) = third $ foldl f (x,y,[]) xs
+  where
+    third (_, _, x) = x
+    f (x, y, ls) z = (y, z, if y > x && y > z then y:ls else ls)
+
+
+
+main = do
+  let l = [0,1,2,6, 5, 4, 6, 7, 12, 9, 10, 11] 
+  let res = myfilter isPeak l 0
+  let n = length(res)
+  print n

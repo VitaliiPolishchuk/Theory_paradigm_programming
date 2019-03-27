@@ -1,0 +1,8 @@
+
+main = do
+  let num = 50
+  let fiblist = 0 : 1 : zipWith (+) fiblist (tail fiblist)
+  let conv_num = sqrt (fromIntegral num)
+  let n = round conv_num
+  let converted = take n fiblist
+  print converted

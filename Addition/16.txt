@@ -1,0 +1,7 @@
+main = do
+  let list = [1..10]
+  let n = 3
+  let rev = reverse list
+  let list2 = drop n rev
+  let final = reverse list2
+  print final

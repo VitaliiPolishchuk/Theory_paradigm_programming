@@ -1,0 +1,6 @@
+main = do
+  let list1 = [1..10]
+  let hd = head list1
+  let list2 = list1 ++ [hd]
+  let finalL = tail list2
+  print finalL

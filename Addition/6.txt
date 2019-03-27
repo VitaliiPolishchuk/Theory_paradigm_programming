@@ -1,0 +1,8 @@
+sinsL [] = []
+sinsL (x:xs) = s:(sinsL xs)
+  where s = sin x
+
+main = do
+  let list = [1..50]
+  let conv_l = sinsL list
+  print conv_l

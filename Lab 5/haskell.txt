@@ -36,12 +36,8 @@ allNonterminalsInGrammar (Grammar (prod:prods)) =
     )
 
 type FirstSet = (Set Terminal)
-type FollowSet = (Set Terminal)
 data FirstMap = FirstMap (Data.Map.Map Nonterminal (Set Terminal)) deriving (Show, Eq)
--- A FirstMap maps a symbol to its FirstSet
 
-data FollowMap = FollowMap (Data.Map.Map Nonterminal (Set Terminal)) deriving (Show, Eq)
--- A FollowMap maps a symbol to its FollowSet
 
 getFirstSetFor :: Nonterminal -> FirstMap -> FirstSet
 getFirstSetFor nonterminal (FirstMap firstmap) =
@@ -50,38 +46,15 @@ getFirstSetFor nonterminal (FirstMap firstmap) =
     f Nothing = Data.Set.empty
     f (Just set) = set
 
-getFollowSetFor :: Nonterminal -> FollowMap -> FollowSet
-getFollowSetFor nonterminal (FollowMap firstmap) =
-  f $ Data.Map.lookup nonterminal firstmap
-  where
-    f Nothing = Data.Set.empty
-    f (Just set) = set
-
 mergeSetIntoFirstMap :: FirstMap -> Nonterminal -> Set Terminal -> FirstMap
 mergeSetIntoFirstMap (FirstMap map) nt t = FirstMap (insertWith (Data.Set.union) nt t map)
-
-mergeSetIntoFollowMap :: FollowMap -> Nonterminal -> Set Terminal -> FollowMap
-mergeSetIntoFollowMap (FollowMap map) nt t = FollowMap (insertWith (Data.Set.union) nt t map)
 
 ---------------------------------------------------------
 
 fixpoint :: Eq a => (a -> a) -> a -> a
-fixpoint f x = let x' = f x in if x == x' then x else fixpoint f x'
-
-----------------------------------------------------
--- FIRST⁰ gives ∅ to each nonterminal;
---
--- Then repeat:
---
--- If X is a terminal then FIRST(X) = {X}
--- If X is a nonterminal
---   If X -> ε is a production then add ε to FIRST(X)
---   If X->Y₁ Y₂ ... Yk for some k >= 1
---     If ε is in FIRST⁻¹(Yⱼ) for ALL j= 1...k add ε
---     If ε is in FIRST⁻¹(Yᵢ) for ALL i= 1...l < k
---                   then add FIRST(Yₗ₊1)
---
--- Stop when nothing can be added (i.e.: find a fixpoint)
+fixpoint f x = let x' = f x in 
+            if x == x' then x 
+            else fixpoint f x'
 
 
 firstt :: Grammar -> FirstMap
@@ -98,22 +71,19 @@ firstt grammar = (fixpoint  (firsti grammar) (first0 grammar))
     firsti (Grammar []) fMinus1 = fMinus1
     firsti (Grammar (prod:prods)) fMinus1 =
       (
-        mergeSetIntoFirstMap                  -- Add to the FIRST_(i-1) set,
-        (firsti (Grammar prods) fMinus1)      -- (computed from the remaining productions)
-        (left_hand prod)                      -- for the symbol on the LHS of the current production prod,
-        (terminalsForRHS prod)                -- the terminals obtained by applying the rules on the current production prod
+        mergeSetIntoFirstMap                  
+        (firsti (Grammar prods) fMinus1)      
+        (left_hand prod)                      
+        (terminalsForRHS prod)                
       )
       where   
         --
         terminalsForRHS :: Production -> Set Terminal
-        terminalsForRHS (Prod _ []) = (Data.Set.singleton Epsilon)
-        --   If X -> ε is a production then add ε to FIRST(X)        
+        terminalsForRHS (Prod _ []) = (Data.Set.singleton Epsilon)        
         terminalsForRHS (Prod _ [(Right Epsilon)]) = (Data.Set.singleton Epsilon)
         terminalsForRHS (Prod x (yj:ys)) =
-          case yj of
-            -- If X is a terminal then FIRST(X) = {X}     
+          case yj of    
             Right terminal    -> Data.Set.singleton terminal
-            -- Otherwise...
             Left  nonterminal -> if   (Data.Set.member Epsilon first_iminus1)
                                  then (Data.Set.union
                                        (terminalsForYj)
@@ -123,122 +93,19 @@ firstt grammar = (fixpoint  (firsti grammar) (first0 grammar))
                 first_iminus1 = getFirstSetFor nonterminal fMinus1
 
                 terminalsForYj = (Data.Set.delete Epsilon first_iminus1)
-            --     If ε is in FIRST⁻¹(Yᵢ) for ALL i= 1...l < k
-            --                   then add FIRST(Yₗ₊1)
-            --     --> guaranteed because we add FIRST(Yₗ₊1) and we
-            --         continue adding terminalsRHS for the
-            --         remainder of the production only if ε is in FIRST⁻¹
+       
 
-            --     If ε is in FIRST⁻¹(Yⱼ) for ALL j= 1...k add ε
-            --     --> guaranteed because we continue adding terminalsRHS for the
-            --         remainder of the production only if ε is in FIRST⁻¹
-            --         eventually adding terminalsForRHS (Prod _ []) = (Data.Set.singleton Epsilon)   
 
--------------------------------------------------------------------------
--- We can compute FIRST for any string X₁X₂...Xₙ as follows.
--- Add to FIRST(X₁X₂... Xₙ) all non-ε symbols of FIRST(X₁).
--- Also add the non-ε symbols of FIRST(X₂), if ε is in FIRST(X₁);
--- and so on.
--- Finally, add ε to FIRST(X₁X₂ . . Xₙ) if, for all i, ε is in FIRST(Xᵢ)
--------------------------------------------------------------------------
-firstForWord :: [Symbol] -> FirstMap -> FirstSet
-firstForWord [(Left nt)] first = getFirstSetFor nt first -- If Epsilon in first don't remove
-firstForWord [(Right t)] first = (Data.Set.singleton t)
-firstForWord ((Left nt):ss) first =
-  if (Data.Set.member
-      Epsilon
-      (getFirstSetFor nt first)
-     )
-  then (Data.Set.union
-        firstMinusEpsilon
-        (firstForWord ss first)
-       )
-  else firstMinusEpsilon
-       where firstMinusEpsilon = (Data.Set.delete
-                                  Epsilon
-                                  (getFirstSetFor nt first)
-                                 )         
-----------------------------------------------------
--- FOLLOW⁰ gives $ to FOLLOW(S) and {} to everything else;
---
--- Then repeat:
---
--- If there is a production A -> w₁Bw₂ ,
---   then everything in FIRST(w₂) except ε is in FOLLOW(B)
---   If where FIRST(w₂) contains Epsilon,
---   then everything in FOLLOW (A) is also in FOLLOW (B).
--- If there is a production A -> w₁B,
---   then everything in FOLLOW (A) is in FOLLOW (B).
---
--- Stop when nothing can be added (i.e. find a fixpoint)
------------------------------------------------------
-
-follow :: Grammar -> FollowMap
-follow grammar = (fixpoint (followi grammar (firstt grammar)) (follow0 grammar))
-  where
-    --------------------------------------------------------
-    follow0 :: Grammar -> FollowMap
-    follow0 grammar = FollowMap $
-      (Data.Map.fromList $ (fmap defaults) $ Data.Set.toList (allNonterminalsInGrammar grammar))
-      where
-        defaults nt@(NT _) = (nt, (Data.Set.empty))
-        defaults nt@(Start _) = (nt, (Data.Set.singleton Dollar))
-    --------------------------------------------------------
-    followi :: Grammar -> FirstMap -> FollowMap -> FollowMap
-    followi (Grammar [])  _ fMinus1 = fMinus1
-    followi (Grammar (prod:prods)) firstMapForG fMinus1 =
-      (mergeTerminalsFromProd   -- Add the terminals obtained by applying the rules on the current production
-       prod
-       (followi            -- 
-        (Grammar prods)    --
-        firstMapForG       -- to the FOLLOW sets obtained from the remaining productions
-        fMinus1            --
-       )
-      )
-      where
-        mergeTerminalsFromProd :: Production -> FollowMap -> FollowMap
-        mergeTerminalsFromProd (Prod l (s:ss)) = (mergeTerminalsFromProd' l [] s ss)
-        mergeTerminalsFromProd' :: Nonterminal -> [Symbol] -> Symbol -> [Symbol] -> FollowMap -> FollowMap
-        -- If there is a production A -> w₁Bw₂ ,
-        mergeTerminalsFromProd' a w1 nt@(Left b) w2@(w21:w2s) fMinus1 = (mergeSetIntoFollowMap
-                                                                         (mergeTerminalsFromProd' a (w1 ++ [nt]) w21 w2s fMinus1)
-                                                                         b
-                                                                         newTerminals
-                                                                        )
-          where
-              --  everything in FIRST(w₂) except ε is in FOLLOW(B)
-              firstW2MinusEpsilon = (Data.Set.delete Epsilon (firstForWord w2 firstMapForG))
-              newTerminals = if (Data.Set.member Epsilon (firstForWord w2 firstMapForG))
-                                --   If where FIRST(w₂) contains Epsilon,
-                                --   then everything in FOLLOW (A) is also in FOLLOW (B).
-                             then (Data.Set.union (getFollowSetFor a fMinus1) firstW2MinusEpsilon)
-                             else (firstForWord w2 firstMapForG)
-        -- If there is a production A -> w₁B, then everything in FOLLOW (A) is in FOLLOW (B).
-        mergeTerminalsFromProd' a w1 (Left b) [] fMinus1 = (mergeSetIntoFollowMap
-                                                            fMinus1
-                                                            b
-                                                            (getFollowSetFor a fMinus1)
-                                                           )
-        -- We don't have to insert anything for terminals; i.e. there are no rules
-        -- for A -> w₁Tw₂ where T is terminal; if we are at the end of the production we're done
-        mergeTerminalsFromProd' a _ (Right _) [] fMinus1 = fMinus1
-        -- Otherwise just recurse
-        mergeTerminalsFromProd' a w1 (Right t) (w2:w2s) fMinus1 = (mergeTerminalsFromProd' a (w1 ++ [(Right t)]) w2 w2s fMinus1)  
 main = let
-  -- Example from dragon book
-  dragon_gram = Grammar [p1, p2, p3, p4, p5, p6, p7, p8] where
-    p1 = Prod {left_hand = (Start "E"),   right_hand = [Left  (NT "T"),   Left (NT "E'")]}
-    p2 = Prod {left_hand = (NT "E'"),  right_hand = [Right (T "+"),    Left (NT "T"),    Left (NT "E'")]}
-    p3 = Prod {left_hand = (NT "E'"),  right_hand = [Right Epsilon]}
-    p4 = Prod {left_hand = (NT "T"),   right_hand = [Left  (NT "F"),   Left (NT "T'")]}
-    p5 = Prod {left_hand = (NT "T'"),  right_hand = [Right (T "*"),    Left (NT "F"),    Left (NT "T'")]}
-    p6 = Prod {left_hand = (NT "T'"),  right_hand = [Right Epsilon]}
-    p7 = Prod {left_hand = (NT "F"),   right_hand = [Right (T "("),    Left (Start "E"),    Right (T ")")]}
-    p8 = Prod {left_hand = (NT "F"),   right_hand = [Right (T "id")]}
+  dragon_gram = Grammar [p1, p2, p3, p4] where
+    p1 = Prod {left_hand = (Start "S"),   right_hand = [Left  (NT "A"),   Left (NT "B")]}
+    p2 = Prod {left_hand = (Start "S"),  right_hand = [Left (NT "B"),    Right (T "a")]}
+    p3 = Prod {left_hand = (NT "A"),  right_hand = [Left (Start "S")]}
+    p4 = Prod {left_hand = (NT "B"),   right_hand = [Right (T "b")]}
   in do
   putStrLn "EXAMPLE GRAMMAR: "
   print (dragon_gram)
   putStrLn "FIRST(G) = "
-  print (firstt dragon_gram)
-  putStrLn "FOLLOW(G) = "
-  print (follow dragon_gram)      
+  let first_map = firstt dragon_gram
+  let nonTerm = NT "A"
+  print(getFirstSetFor nonTerm first_map)

@@ -1,0 +1,17 @@
+factorial :: Int -> Int
+factorial num
+    | (num == 0) = 1
+    | (num > 0) = num * factorial (num-1)
+    | otherwise = error "Factorail is not defined for -ve numbers"
+
+sumOfFacts :: Int -> Int -> Int
+sumOfFacts num k
+    | (num < k) = (factorial k) 
+    | otherwise = (factorial num) + (sumOfFacts (num-2) k)
+    
+
+main = do
+  let num = 6
+  let m = (quot num 2)::Int
+  let final = sumOfFacts num m
+  print final

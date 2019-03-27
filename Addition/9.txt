@@ -1,0 +1,12 @@
+zsuv [] _ = []
+zsuv x 0 = x
+zsuv x k = (zsuv l h)
+  where h = k - 1
+        hd = head x
+        xs = x ++ [hd]
+        l = tail xs
+
+main = do
+  let list1 = [1..10]
+  let finalL = zsuv list1 3
+  print finalL

@@ -1,0 +1,4 @@
+main = do
+  let num = 14
+  let last_number = mod num 10
+  print last_number

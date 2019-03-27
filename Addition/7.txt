@@ -1,0 +1,14 @@
+repeat' x = x : repeat' x
+
+formList [] _ = []
+formList (x:xs) i = l:(formList xs j)
+  where j = i + 1
+        l = take i rep
+        rep = repeat' x
+        
+
+main = do
+  let list = [1..10]
+  let form_l = formList list 1
+  let conv_l = concat form_l
+  print conv_l

@@ -1,0 +1,109 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class FiniteAutomataController {
+private int[][] automaton;
+private List<List<Integer>> words;
+	
+	@GetMapping("/automata/checkAutomaton")
+	public Boolean calculateResult() {
+		automaton = initAutomaton();
+		for(int i = 0; i < words.size(); i++) {
+			if(checkAutomaton(words.get(i))) return true;
+		}
+		return false;
+	} 
+	
+	
+	
+	@GetMapping("/automata/{word}")
+	public List<List<Integer>> addValuesToList(@PathVariable int[] word) {
+		int [] set = new int[2];
+		for(int i = 0; i < set.length; i++) {
+			set[i] = i;
+		}
+		generateWords(100, set, word);
+		
+		return words;
+	}
+	
+	private int [][] initAutomaton(){
+		int[][] automaton = new int [3][2];
+		
+		automaton[0][0] = 1;
+		automaton[0][1] = 0;
+		automaton[1][0] = 2;
+		automaton[1][1] = 0;
+		automaton[2][0] = 2;
+		automaton[0][1] = 0;
+		
+		return automaton;
+	}
+	
+	private void generateWords(int n, int[] set, int[] word){
+		words = new ArrayList<List<Integer>>();
+		List<List<Integer>> list = new ArrayList<List<Integer>>();
+		ArrayList<Integer> lWord = new ArrayList<Integer>();
+		
+		for(int i = 0; i < word.length; i++) {
+			lWord.add(word[i]);
+		}
+		
+		int count = 0;
+		List<Integer> iL1 = new ArrayList<Integer>();
+		iL1.add(0);
+		list.add(iL1);
+		
+		List<Integer> iL2 = new ArrayList<Integer>();
+		iL2.add(1);
+		list.add(iL2);
+		
+		for(int i = 0; i < list.size(); i++) {
+			LinkedList<Integer> lToPowerSet = new LinkedList<Integer>();
+			lToPowerSet.addAll(lWord);
+			lToPowerSet.addAll(list.get(i));
+			lToPowerSet.addAll(lWord);
+			words.add(lToPowerSet);
+			count++;
+		}
+		
+		while(count < n) {
+			List<List<Integer>> l = new LinkedList<List<Integer>>();
+			
+			for(int i = 0; i < list.size(); i++) {
+				for(int j = 0; j < set.length; j++) {
+					List<Integer> lToL = new LinkedList<Integer>();
+					lToL.addAll(list.get(i));
+					lToL.add(set[j]);
+					l.add(lToL);
+				}
+			}
+			
+			for(int i = 0; i < l.size(); i++) {
+				LinkedList<Integer> lToPowerSet = new LinkedList<Integer>();
+				lToPowerSet.addAll(lWord);
+				lToPowerSet.addAll(l.get(i));
+				lToPowerSet.addAll(lWord);
+				words.add(lToPowerSet);
+			}
+			
+			list = l;
+			count += l.size();
+		}
+	}
+	
+	private boolean checkAutomaton(List<Integer> word) {
+		int state = 0;
+		for(int i = 0; i < word.size(); i++) {
+			state = automaton[state][word.get(i)]; 
+		}
+		return state == 2;
+	}
+}
