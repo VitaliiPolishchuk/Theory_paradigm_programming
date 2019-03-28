@@ -1,0 +1,15 @@
+do_list(N, L):- 
+  findall(Num, between(1, N, Num), L).
+
+sinsL([Item|List], [SubRes1|SubRes2]) :-
+    M is sin(Item),
+    SubRes1 is Item * M,
+    sinsL(List, SubRes2).
+
+sinsL([Item], [SubRes1]) :-
+    M is sin(Item),
+    SubRes1 is Item * M.
+
+sin_list(N, R) :-
+    do_list(N, List),
+    sinsL(List, R).

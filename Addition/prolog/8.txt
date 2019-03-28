@@ -1,0 +1,4 @@
+left_one([Item|List], Result) :-
+    append(List, [Item], Result).
+left_one([Item], [Item]).
+left_one([], []).

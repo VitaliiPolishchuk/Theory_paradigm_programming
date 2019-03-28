@@ -1,0 +1,15 @@
+insertList(H, L, [H|L]):- !.
+
+factorial(0, 1, [1]).
+factorial(N, F, Fs):- N1 is N-1, factorial(N1, F1, L), F is N * F1, insertList(F, L, Fs). 
+
+list_factorial(X, L):- factorial(X, F, L).
+
+sum_list([], 0).
+sum_list([H|T], Sum) :-
+   sum_list(T, Rest),
+   Sum is H + Rest.
+
+sum_list_factorial(X, R) :-
+    list_factorial(X, L),
+    sum_list(L, R).

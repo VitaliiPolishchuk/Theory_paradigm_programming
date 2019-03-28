@@ -1,0 +1,29 @@
+isPrime( 2 ) .
+isPrime( P ) :-
+  P > 2 ,
+  isDivisible( P , P-1 ) .
+
+isDivisible( P , X ) :-
+  X > 1,
+  P mod X =\= 0 ,
+  isDivisible( P , X-1 ) .
+isDivisible( _ , X ) :-
+  1 is X .
+
+generatePrime( 1 , [] ) :- !.
+generatePrime( N , X ) :-
+  not( isPrime( N ) ) , !,
+  Z is N-1 ,
+  generatePrime( Z , X ) .
+generatePrime(N, [N | X] ):-
+  Z is N-1 ,
+  generatePrime( Z , X ) . % <- tail recursion
+
+filter(N, I) :-
+    N =< I.
+
+prime_list(N, R) :-
+    M = N * 2,
+    generatePrime(M, Pri),
+    exclude(filter(M), Pri, Les),
+    reverse(Les, R).

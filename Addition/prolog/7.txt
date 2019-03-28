@@ -1,0 +1,11 @@
+build(X, N, List)  :- 
+    findall(X, between(1, N, _), List).
+
+form_list([Item|List], I, Result) :-
+    build(Item, I, SubRes1),
+    J is I + 1,
+    form_list(List, J, SubRes2),
+    append(SubRes1, SubRes2, Result).
+
+form_list([Item], I, SubRes1) :-
+    build(Item, I, SubRes1).

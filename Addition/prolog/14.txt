@@ -1,0 +1,12 @@
+right_one(List, Result) :-
+    reverse(List, ListRev),
+    ListRev = [H|T],
+    reverse(T, List1),
+    append([H], List1, Result).
+right_one([], []).
+
+right_n(List, N, Result) :-
+    (   N == 0 ->  Result = List;
+    M is N - 1,
+    right_one(List, SubRes),
+    right_n(SubRes, M, Result)).

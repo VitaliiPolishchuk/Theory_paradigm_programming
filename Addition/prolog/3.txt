@@ -1,0 +1,2 @@
+do_list(N, L):- 
+  findall(Num, between(1, N, Num), L).

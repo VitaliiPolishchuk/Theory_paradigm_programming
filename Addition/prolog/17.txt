@@ -1,0 +1,22 @@
+insertList(H, L, [H|L]):- !.
+
+factorial(0, 1, [1]).
+factorial(N, F, Fs):- N1 is N-1, factorial(N1, F1, L), F is N * F1, insertList(F, L, Fs). 
+
+list_factorial(X, L):- factorial(X, F, L).
+
+sum_list([H|T], N, N, H, M).
+sum_list([H|T], I, N, Sum, M) :-
+   J is I - 1,
+   sum_list(T, J, N, Rest, M),
+   (   0 is J mod 2 ->  
+   		Sum is H + Rest;
+   		Sum is Rest).
+
+sum_list_factorial(X, R) :-
+    list_factorial(X, L),
+    div2great(X, N),
+    sum_list(L, X, N, R, X).
+
+div2great(N, R) :-
+    R is ceiling(float(N) / 2.0).

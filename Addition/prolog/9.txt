@@ -1,0 +1,10 @@
+left_one([Item|List], Result) :-
+    append(List, [Item], Result).
+left_one([Item], [Item]).
+left_one([], []).
+
+left_n(List, N, Result) :-
+    (   N == 0 ->  Result = List;
+    M is N - 1,
+    left_one(List, SubRes),
+    left_n(SubRes, M, Result)).
